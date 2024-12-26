@@ -13,3 +13,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base para os modelos do SQLAlchemy
 Base = declarative_base()
+
+def criar_tabelas():
+    from models import Time, Jogador  # Importar os modelos
+    Base.metadata.create_all(bind=engine)

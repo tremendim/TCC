@@ -1,6 +1,8 @@
 from fastapi import FastAPI
-from rotas import times
+from rotas import times, jogadores
+from database import criar_tabelas
 
+criar_tabelas()
 # Inicialização da aplicação FastAPI
 app = FastAPI(
     title="Campeonato de Futsal",
@@ -10,6 +12,7 @@ app = FastAPI(
 
 # Incluindo as rotas dos times
 app.include_router(times.router, prefix="/times", tags=["Times"])
+app.include_router(jogadores.router, prefix="/jogadores", tags=["Jogador"])
 
 # Rota inicial
 @app.get("/")

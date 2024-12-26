@@ -4,6 +4,7 @@ from models import Time
 from schemas import TimeCriar, TimeResposta
 from database import SessionLocal
 
+
 # Criando o roteador
 router = APIRouter()
 
@@ -15,6 +16,7 @@ def obter_sessao():
     finally:
         db.close()
 
+
 @router.post("/", response_model=TimeResposta)
 def criar_time(time: TimeCriar, db: Session = Depends(obter_sessao)):
     novo_time = Time(nome=time.nome, divisao=time.divisao)
@@ -23,9 +25,11 @@ def criar_time(time: TimeCriar, db: Session = Depends(obter_sessao)):
     db.refresh(novo_time)
     return novo_time
 
+
 @router.get("/", response_model=list[TimeResposta])
 def listar_times(db: Session = Depends(obter_sessao)):
     return db.query(Time).all()
+
 
 @router.get("/{id_time}", response_model=TimeResposta)
 def obter_time(id_time: int, db: Session = Depends(obter_sessao)):

@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
-
+from pydantic import BaseModel
 # Schemas para validação com Pydantic
 
 #Validação do metodo Post para criar times
@@ -14,6 +14,8 @@ class TimeResposta(BaseModel):
     id: int
     nome: str
     divisao: str
+    gols_feitos: int = 0
+    gols_sofridos: int = 0
     jogadores: List["RespostaJogador"] = []
 
     class Config:
@@ -32,6 +34,7 @@ class RespostaJogador(BaseModel):
     nome: str
     idade: int
     posicao: str
+    #gols_realizados: int = 0  # Número de gols realizados pelo jogador
  #   time: Optional[TimeResposta] #Inclui informações do time no retorno
 
     class Config:
@@ -45,6 +48,11 @@ class AtualizarJogador(BaseModel):
     posicao: Optional[str]
     id_time: Optional[int]
 
+class GolsJogo(BaseModel):
+    jogador_id: int
+    time_id: int  # ID do time que fez o gol
+    quantidade: int
+
 class JogoBase(BaseModel):
     time_casa_id: int
     time_visitante_id: int
@@ -57,13 +65,15 @@ class JogoResposta(JogoBase):
     id: int
     placar_casa: Optional[int] = None
     placar_visitante: Optional[int] = None
+    #gols: List[GolsJogo]  # Lista de gols marcados no jogo
 
     class config:
         orm_mode = True
 
-from pydantic import BaseModel
+class GolDetalhado(BaseModel):
+    jogador_id: int
+    quantidade: int
 
-class AtualizarPlacar(BaseModel):
-    id: int
-    placar_casa: int
-    placar_visitante: int
+class AtualizarPlacarComGols(BaseModel):
+    jogo_id: int
+    gols: List[GolDetalhado]  # Lista de jogadores e quantidade de gols

@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 from typing import List, Optional
 
 # Schemas para validação com Pydantic
@@ -38,7 +39,31 @@ class RespostaJogador(BaseModel):
 
 
 class AtualizarJogador(BaseModel):
+
     nome: Optional[str]
     idade: Optional[int]
     posicao: Optional[str]
     id_time: Optional[int]
+
+class JogoBase(BaseModel):
+    time_casa_id: int
+    time_visitante_id: int
+    data_hora: datetime
+
+class JogoCriar(JogoBase):
+    pass
+
+class JogoResposta(JogoBase):
+    id: int
+    placar_casa: Optional[int] = None
+    placar_visitante: Optional[int] = None
+
+    class config:
+        orm_mode = True
+
+from pydantic import BaseModel
+
+class AtualizarPlacar(BaseModel):
+    id: int
+    placar_casa: int
+    placar_visitante: int

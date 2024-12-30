@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -22,3 +22,17 @@ class Jogador(Base):
 
     # Relação para acessar o time do jogador
     time = relationship("Time", back_populates="jogadores")
+
+class Jogo(Base):
+    __tablename__ = "jogos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    time_casa_id = Column(Integer, ForeignKey("times.id"))
+    time_visitante_id = Column(Integer, ForeignKey("times.id"))
+    data_hora = Column(DateTime)
+    placar_casa = Column(Integer, nullable=True)
+    placar_visitante = Column(Integer, nullable=True)
+    
+    # Relacionamentos com os times
+    time_casa = relationship("Time", foreign_keys=[time_casa_id])
+    time_visitante = relationship("Time", foreign_keys=[time_visitante_id])

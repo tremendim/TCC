@@ -42,7 +42,13 @@ def obter_jogador(id_jogador: int, db: Session = Depends(obter_sessao)):
     jogador = db.query(Jogador).filter(Jogador.id == id_jogador).first()
     if not jogador:
         raise HTTPException(status_code=404, detail="Jogador não encontrado")
-    return jogador
+    return {
+        "id": jogador.id,
+        "nome": jogador.nome,
+        "idade": jogador.idade,
+        "posicao": jogador.posicao,
+        "gols_realizados": jogador.gols_realizados  # Inclui os gols realizados
+    }
 
 #Listar jogadores de um time especifico
 @router.get("/time/{id_time}", response_model=RespostaJogador)

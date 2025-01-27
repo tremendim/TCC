@@ -34,8 +34,7 @@ class RespostaJogador(BaseModel):
     nome: str
     idade: int
     posicao: str
-    #gols_realizados: int = 0  # Número de gols realizados pelo jogador
- #   time: Optional[TimeResposta] #Inclui informações do time no retorno
+    gols_realizados: int
 
     class Config:
         orm_mode = True  # Permite conversão automática de objetos ORM do SQLAlchemy

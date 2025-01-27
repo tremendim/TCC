@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from models import Time
-from schemas import TimeCriar, TimeResposta
+from schemas import TimeCriar, TimeResposta, ListaTimesResposta
 from database import SessionLocal
 
 
@@ -26,9 +26,16 @@ def criar_time(time: TimeCriar, db: Session = Depends(obter_sessao)):
     return novo_time
 
 
-@router.get("/", response_model=list[TimeResposta])
+@router.get("/", response_model=ListaTimesResposta)
 def listar_times(db: Session = Depends(obter_sessao)):
-    return db.query(Time).all()
+    # Busca todos os times no banco de dados
+    times = db.query(Time).all()
+    
+    # Retorna a quantidade total de times e a lista de times
+    return {
+        "total_times": len(times),  # Quantidade total de times
+        "times": times  # Lista de times
+    }
 
 
 @router.get("/{id_time}", response_model=TimeResposta)

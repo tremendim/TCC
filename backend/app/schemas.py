@@ -29,6 +29,12 @@ class TimeResposta(BaseModel):
 
     class Config:
         orm_mode = True
+class ListaTimesResposta(BaseModel):
+    total_times: int  # Quantidade total de times
+    times: List[TimeResposta]  # Lista de times
+
+    class Config:
+        orm_mode = True
 
 # Atualiza as referências futuras
 TimeResposta.update_forward_refs()

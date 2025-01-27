@@ -1,47 +1,46 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
-# Schemas para validação com Pydantic
 
-#Validação do metodo Post para criar times
+# Schema para criar um time
 class TimeCriar(BaseModel):
     nome: str
     divisao: str
 
-#Validação da resposta do metodo Get do time
+# Schema para resposta de um jogador
+class RespostaJogador(BaseModel):
+    id: int
+    nome: str
+    idade: int
+    posicao: str
+    gols_realizados: int = 0
+
+    class Config:
+        orm_mode = True
+
+# Schema para resposta de um time
 class TimeResposta(BaseModel):
     id: int
     nome: str
     divisao: str
     gols_feitos: int = 0
     gols_sofridos: int = 0
-    jogadores: List["RespostaJogador"] = []
+    jogadores: List[RespostaJogador] = []  # Referência ao schema RespostaJogador
 
     class Config:
         orm_mode = True
 
-#Usado na rota de criação (POST), valida os dados enviados pelo cliente.
+# Atualiza as referências futuras
+TimeResposta.update_forward_refs()
+
+# Outros schemas...
 class CriarJogador(BaseModel):
     nome: str
     idade: int
     posicao: str
-    id_time: int  # O time ao qual o jogador pertence (chave estrangeira)
-
-#Define o formato dos dados que serão enviados pela API como resposta ao cliente.
-class RespostaJogador(BaseModel):
-    id: int
-    nome: str
-    idade: int
-    posicao: str
-    gols_realizados: int
-
-    class Config:
-        orm_mode = True  # Permite conversão automática de objetos ORM do SQLAlchemy
-
+    id_time: int
 
 class AtualizarJogador(BaseModel):
-
     nome: Optional[str]
     idade: Optional[int]
     posicao: Optional[str]
@@ -49,7 +48,7 @@ class AtualizarJogador(BaseModel):
 
 class GolsJogo(BaseModel):
     jogador_id: int
-    time_id: int  # ID do time que fez o gol
+    time_id: int
     quantidade: int
 
 class JogoBase(BaseModel):
@@ -64,9 +63,8 @@ class JogoResposta(JogoBase):
     id: int
     placar_casa: Optional[int] = None
     placar_visitante: Optional[int] = None
-    #gols: List[GolsJogo]  # Lista de gols marcados no jogo
 
-    class config:
+    class Config:
         orm_mode = True
 
 class GolDetalhado(BaseModel):
@@ -75,4 +73,4 @@ class GolDetalhado(BaseModel):
 
 class AtualizarPlacarComGols(BaseModel):
     jogo_id: int
-    gols: List[GolDetalhado]  # Lista de jogadores e quantidade de gols
+    gols: List[GolDetalhado]

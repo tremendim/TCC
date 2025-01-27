@@ -35,11 +35,13 @@ def listar_jogos(db: Session = Depends(get_db)):
 
 @router.get("/{jogo_id}", response_model=JogoResposta)
 def obter_jogo(jogo_id: int, db: Session = Depends(get_db)):
+    # Busca o jogo no banco de dados
     jogo = db.query(Jogo).filter(Jogo.id == jogo_id).first()
     if not jogo:
         raise HTTPException(status_code=404, detail="Jogo não encontrado")
-    return jogo
 
+    # Retorna o jogo sem os detalhes dos gols
+    return jogo
 
 
 @router.put("/atualizar-placar", response_model=JogoResposta)

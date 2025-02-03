@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 from models import Jogador, Time
 from schemas import CriarJogador, AtualizarJogador, RespostaJogador
 from database import SessionLocal
-
+import shutil
+import os
 
 # Criando o roteador
 router = APIRouter()
@@ -58,4 +59,29 @@ def obter_jogador_time(id_time: int, db: Session = Depends(obter_sessao)):
         raise HTTPException(status_code=404, detail="Time não encontrado")
     return time.jogadores
 
+# Configuração do diretório para salvar as imagens
+IMAGENS_DIR = "imagens"
+os.makedirs(IMAGENS_DIR, exist_ok=True)
 
+@router.post("/{id_jogador}/upload-imagem")
+def upload_imagem_jogador(
+    id_jogador: int,
+    imagem: UploadFile = File(...),
+    db: Session = Depends(obter_sessao)
+):
+    # Verifica se o jogador existe
+    jogador = db.query(Jogador).filter(Jogador.id == id_jogador).first()
+    if not jogador:
+        raise HTTPException(status_code=404, detail="Jogador não encontrado")
+
+    # Salva a imagem no diretório
+    caminho_imagem = os.path.join(IMAGENS_DIR, f"jogador_{id_jogador}.jpg")
+    with open(caminho_imagem, "wb") as buffer:
+        shutil.copyfileobj(imagem.file, buffer)
+
+    # Atualiza o caminho da imagem no banco de dados
+    jogador.imagem = caminho_imagem
+    db.commit()
+    db.refresh(jogador)
+
+    return {"mensagem": "Imagem do jogador atualizada com sucesso", "caminho_imagem": caminho_imagem}

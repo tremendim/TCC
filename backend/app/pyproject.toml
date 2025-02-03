@@ -12,6 +12,7 @@ sqlalchemy = "^2.0.37"
 pydantic = "^2.10.5"
 alembic = "^1.14.0"
 fastapi = "^0.115.6"
+python-multipart = "^0.0.20"
 
 
 [build-system]

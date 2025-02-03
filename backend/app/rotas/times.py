@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 from models import Time
 from schemas import TimeCriar, TimeResposta, ListaTimesResposta
 from database import SessionLocal
+import shutil
+import os
 
 
 # Criando o roteador
@@ -15,6 +17,7 @@ def obter_sessao():
         yield db
     finally:
         db.close()
+
 
 
 @router.post("/", response_model=TimeResposta)
@@ -53,3 +56,30 @@ def deletar_time(id_time: int, db: Session = Depends(obter_sessao)):
     db.delete(time)
     db.commit()
     return {"mensagem": "Time deletado com sucesso"}
+
+#Configuração do Diretorio para salvar as imagens
+IMAGENS_DIR = "imagens"
+os.makedirs(IMAGENS_DIR, exist_ok=True)
+
+@router.post("/{id_time}/upload-imagem")
+def upload_imagem_time(
+    id_time: int,
+    imagem: UploadFile = File(...),
+    db: Session = Depends(obter_sessao)
+):
+    # Verifica se o time existe
+    time = db.query(Time).filter(Time.id == id_time).first()
+    if not time:
+        raise HTTPException(status_code=404, detail="Time não encontrado")
+
+    # Salva a imagem no diretório
+    caminho_imagem = os.path.join(IMAGENS_DIR, f"time_{id_time}.jpg")
+    with open(caminho_imagem, "wb") as buffer:
+        shutil.copyfileobj(imagem.file, buffer)
+
+    # Atualiza o caminho da imagem no banco de dados
+    time.imagem = caminho_imagem
+    db.commit()
+    db.refresh(time)
+
+    return {"mensagem": "Imagem do time atualizada com sucesso", "caminho_imagem": caminho_imagem}

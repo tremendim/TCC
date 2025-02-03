@@ -21,6 +21,7 @@ class Time(Base):
     divisao = Column(String, index=True)
     gols_feitos = Column(Integer, default=0)  # Gols feitos pelo time
     gols_sofridos = Column(Integer, default=0)  # Gols sofridos pelo time
+    imagem = Column(String, nullable=True)  
 
     #Rleção para acessar os jogadores de um time
     jogadores = relationship("Jogador", back_populates="time")
@@ -34,6 +35,7 @@ class Jogador(Base):
     posicao = Column(String, nullable=False)  # Posição em campo (ex.: goleiro, atacante, etc.)
     id_time = Column(Integer, ForeignKey("times.id"))  # Relação com o time (chave estrangeira)
     gols_realizados = Column(Integer, default=0)  # Gols realizados pelo jogador
+    imagem = Column(String, nullable=True)
 
     # Relação para acessar o time do jogador
     time = relationship("Time", back_populates="jogadores")

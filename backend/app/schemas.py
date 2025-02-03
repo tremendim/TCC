@@ -14,6 +14,7 @@ class RespostaJogador(BaseModel):
     idade: int
     posicao: str
     gols_realizados: int = 0
+    imagem: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -25,6 +26,7 @@ class TimeResposta(BaseModel):
     divisao: str
     gols_feitos: int = 0
     gols_sofridos: int = 0
+    imagem: Optional[str] = None
     jogadores: List[RespostaJogador] = []  # Referência ao schema RespostaJogador
 
     class Config:

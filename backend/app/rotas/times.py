@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from models import Time
 from schemas import TimeCriar, TimeResposta, ListaTimesResposta
@@ -83,3 +84,13 @@ def upload_imagem_time(
     db.refresh(time)
 
     return {"mensagem": "Imagem do time atualizada com sucesso", "caminho_imagem": caminho_imagem}
+
+@router.get("/{id_time}/imagem")
+def obter_imagem_time(id_time: int, db: Session = Depends(obter_sessao)):
+    # Busca o time no banco de dados
+    time = db.query(Time).filter(Time.id == id_time).first()
+    if not time or not time.imagem:
+        raise HTTPException(status_code=404, detail="Imagem não encontrada")
+
+    # Retorna a imagem como uma resposta de arquivo
+    return FileResponse(time.imagem)

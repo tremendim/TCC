@@ -48,7 +48,8 @@ def obter_jogador(id_jogador: int, db: Session = Depends(obter_sessao)):
         "nome": jogador.nome,
         "idade": jogador.idade,
         "posicao": jogador.posicao,
-        "gols_realizados": jogador.gols_realizados  # Inclui os gols realizados
+        "gols_realizados": jogador.gols_realizados,  # Inclui os gols realizados
+        "imagem": jogador.imagem
     }
 
 #Listar jogadores de um time especifico
@@ -58,30 +59,3 @@ def obter_jogador_time(id_time: int, db: Session = Depends(obter_sessao)):
     if not time:
         raise HTTPException(status_code=404, detail="Time não encontrado")
     return time.jogadores
-
-# Configuração do diretório para salvar as imagens
-IMAGENS_DIR = "imagens"
-os.makedirs(IMAGENS_DIR, exist_ok=True)
-
-@router.post("/{id_jogador}/upload-imagem")
-def upload_imagem_jogador(
-    id_jogador: int,
-    imagem: UploadFile = File(...),
-    db: Session = Depends(obter_sessao)
-):
-    # Verifica se o jogador existe
-    jogador = db.query(Jogador).filter(Jogador.id == id_jogador).first()
-    if not jogador:
-        raise HTTPException(status_code=404, detail="Jogador não encontrado")
-
-    # Salva a imagem no diretório
-    caminho_imagem = os.path.join(IMAGENS_DIR, f"jogador_{id_jogador}.jpg")
-    with open(caminho_imagem, "wb") as buffer:
-        shutil.copyfileobj(imagem.file, buffer)
-
-    # Atualiza o caminho da imagem no banco de dados
-    jogador.imagem = caminho_imagem
-    db.commit()
-    db.refresh(jogador)
-
-    return {"mensagem": "Imagem do jogador atualizada com sucesso", "caminho_imagem": caminho_imagem}

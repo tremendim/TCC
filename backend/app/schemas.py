@@ -82,3 +82,5 @@ class GolDetalhado(BaseModel):
 class AtualizarPlacarComGols(BaseModel):
     jogo_id: int
     gols: List[GolDetalhado]
+    placar_casa: int
+    placar_visitante: int

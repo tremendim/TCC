@@ -46,69 +46,49 @@ def obter_jogo(jogo_id: int, db: Session = Depends(get_db)):
 
 @router.put("/atualizar-placar", response_model=JogoResposta)
 def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db)):
-    # Busca o jogo no banco de dados
     jogo = db.query(Jogo).filter(Jogo.id == dados.jogo_id).first()
     if not jogo:
         raise HTTPException(status_code=404, detail="Jogo não encontrado")
 
-    # Lista para armazenar os gols registrados
-    gols_registrados = []
+    # Define o placar final
+    jogo.placar_casa = dados.placar_casa
+    jogo.placar_visitante = dados.placar_visitante
 
-    # Processa cada jogador e a quantidade de gols
-    for gol in dados.gols:
-        jogador = db.query(Jogador).filter(Jogador.id == gol.jogador_id).first()
-        if not jogador:
-            raise HTTPException(status_code=404, detail=f"Jogador {gol.jogador_id} não encontrado")
+    # Obtém os times do jogo
+    time_casa = db.query(Time).filter(Time.id == jogo.time_casa_id).first()
+    time_visitante = db.query(Time).filter(Time.id == jogo.time_visitante_id).first()
 
-        # Verifica se o jogador pertence a um dos times do jogo
-        if jogador.id_time not in [jogo.time_casa_id, jogo.time_visitante_id]:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Jogador {jogador.nome} não pertence aos times deste jogo"
-            )
+    if not time_casa or not time_visitante:
+        raise HTTPException(status_code=404, detail="Time não encontrado")
 
-        # Atualiza o placar do time correspondente
-        if jogador.id_time == jogo.time_casa_id:
-            jogo.placar_casa += gol.quantidade
-        elif jogador.id_time == jogo.time_visitante_id:
-            jogo.placar_visitante += gol.quantidade
+    # Atualiza estatísticas de gols
+    time_casa.gols_feitos += jogo.placar_casa
+    time_casa.gols_sofridos += jogo.placar_visitante
+    time_visitante.gols_feitos += jogo.placar_visitante
+    time_visitante.gols_sofridos += jogo.placar_casa
 
-        # Atualiza os dados do jogador e do time
-        jogador.gols_realizados += gol.quantidade
-        time = db.query(Time).filter(Time.id == jogador.id_time).first()
-        time.gols_feitos += gol.quantidade
+    # Atualiza vitórias, derrotas, empates e pontuação
+    if jogo.placar_casa > jogo.placar_visitante:
+        time_casa.vitorias += 1
+        time_casa.pontuacao += 3
+        time_visitante.derrotas += 1
+        jogo.time_ganhador = time_casa.id
+        jogo.time_derrotado = time_visitante.id
+    elif jogo.placar_casa < jogo.placar_visitante:
+        time_visitante.vitorias += 1
+        time_visitante.pontuacao += 3
+        time_casa.derrotas += 1
+        jogo.time_ganhador = time_visitante.id
+        jogo.time_derrotado = time_casa.id
+    else:  # Empate
+        time_casa.empates += 1
+        time_visitante.empates += 1
+        time_casa.pontuacao += 1
+        time_visitante.pontuacao += 1
+        jogo.time_ganhador = None  # Sem vencedor
+        jogo.time_derrotado = None  # Sem derrotado
 
-        # Atualiza os gols sofridos do time adversário
-        time_adversario_id = (
-            jogo.time_visitante_id if jogador.id_time == jogo.time_casa_id else jogo.time_casa_id
-        )
-        time_adversario = db.query(Time).filter(Time.id == time_adversario_id).first()
-        time_adversario.gols_sofridos += gol.quantidade
-
-        # Registra o gol no banco
-        db.execute(
-            gols_jogo.insert().values(
-                jogo_id=jogo.id, jogador_id=gol.jogador_id, quantidade=gol.quantidade
-            )
-        )
-
-        # Adiciona o gol registrado à lista
-        gols_registrados.append({
-            "jogador_id": gol.jogador_id,
-            "quantidade": gol.quantidade
-        })
-
-    # Salva as alterações no banco de dados
     db.commit()
     db.refresh(jogo)
 
-    # Retorna o jogo atualizado com os gols registrados
-    return {
-        "id": jogo.id,
-        "time_casa_id": jogo.time_casa_id,
-        "time_visitante_id": jogo.time_visitante_id,
-        "data_hora": jogo.data_hora,
-        "placar_casa": jogo.placar_casa,
-        "placar_visitante": jogo.placar_visitante,
-        "gols": gols_registrados
-    }
+    return jogo

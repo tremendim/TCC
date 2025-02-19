@@ -21,6 +21,10 @@ class Time(Base):
     divisao = Column(String, index=True)
     gols_feitos = Column(Integer, default=0)  # Gols feitos pelo time
     gols_sofridos = Column(Integer, default=0)  # Gols sofridos pelo time
+    vitorias = Column(Integer, default=0)
+    derrotas = Column(Integer, default=0)
+    empates = Column(Integer, default=0)
+    pontuacao = Column(Integer, default=0)
     imagem = Column(String, nullable=True)  
 
     #Rleção para acessar os jogadores de um time
@@ -49,8 +53,12 @@ class Jogo(Base):
     data_hora = Column(DateTime)
     placar_casa = Column(Integer, nullable=True)
     placar_visitante = Column(Integer, nullable=True)
+    time_ganhador = Column(Integer, ForeignKey("times.id"), nullable=True)
+    time_derrotado = Column(Integer, ForeignKey("times.id"), nullable=True)
     
     # Relacionamentos com os times
     time_casa = relationship("Time", foreign_keys=[time_casa_id])
     time_visitante = relationship("Time", foreign_keys=[time_visitante_id])
+    vencedor = relationship("Time", foreign_keys=[time_ganhador])
+    perdedor = relationship("Time", foreign_keys=[time_derrotado])
     gols = relationship("Jogador", secondary=gols_jogo, backref="jogos")  # Gols marcados no jogo

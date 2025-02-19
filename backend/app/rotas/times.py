@@ -41,6 +41,10 @@ def listar_times(db: Session = Depends(obter_sessao)):
         "times": times  # Lista de times
     }
 
+@router.get("/classificacao")
+def classificacao(db: Session = Depends(obter_sessao)):
+    times = db.query(Time).order_by(Time.pontuacao.desc()).all()
+    return times
 
 @router.get("/{id_time}", response_model=TimeResposta)
 def obter_time(id_time: int, db: Session = Depends(obter_sessao)):
@@ -87,6 +91,7 @@ def upload_imagem_time(
 
 @router.get("/{id_time}/imagem")
 def obter_imagem_time(id_time: int, db: Session = Depends(obter_sessao)):
+
     # Busca o time no banco de dados
     time = db.query(Time).filter(Time.id == id_time).first()
     if not time or not time.imagem:
@@ -94,3 +99,4 @@ def obter_imagem_time(id_time: int, db: Session = Depends(obter_sessao)):
 
     # Retorna a imagem como uma resposta de arquivo
     return FileResponse(time.imagem)
+

@@ -18,6 +18,7 @@ class Time(Base):
     __tablename__ = "times"
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String, index=True)
+    sigla = Column(String(4),nullable=True)
     divisao = Column(String, index=True)
     gols_feitos = Column(Integer, default=0)  # Gols feitos pelo time
     gols_sofridos = Column(Integer, default=0)  # Gols sofridos pelo time
@@ -53,8 +54,8 @@ class Jogo(Base):
     data_hora = Column(DateTime)
     placar_casa = Column(Integer, nullable=True)
     placar_visitante = Column(Integer, nullable=True)
-    time_ganhador = Column(Integer, ForeignKey("times.id"), nullable=True)
-    time_derrotado = Column(Integer, ForeignKey("times.id"), nullable=True)
+    time_ganhador = Column(Integer, ForeignKey("times.id"))
+    time_derrotado = Column(Integer, ForeignKey("times.id"))
     
     # Relacionamentos com os times
     time_casa = relationship("Time", foreign_keys=[time_casa_id])

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import List, Optional
 
@@ -6,6 +6,7 @@ from typing import List, Optional
 class TimeCriar(BaseModel):
     nome: str
     divisao: str
+    sigla: str = Field(..., min_length=4, max_length=4)
 
 # Schema para resposta de um jogador
 class RespostaJogador(BaseModel):
@@ -26,6 +27,7 @@ class TimeResposta(BaseModel):
     divisao: str
     gols_feitos: int = 0
     gols_sofridos: int = 0
+    sigla: Optional[str] = None
     imagem: Optional[str] = None
     jogadores: List[RespostaJogador] = []  # Referência ao schema RespostaJogador
 

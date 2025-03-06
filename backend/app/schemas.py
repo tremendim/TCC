@@ -29,6 +29,9 @@ class TimeResposta(BaseModel):
     gols_sofridos: int = 0
     sigla: Optional[str] = None
     imagem: Optional[str] = None
+    vitorias: int
+    derrotas: int
+    empates: int
     jogadores: List[RespostaJogador] = []  # Referência ao schema RespostaJogador
 
     class Config:

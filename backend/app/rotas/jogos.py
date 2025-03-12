@@ -54,6 +54,9 @@ def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db
     jogo.placar_casa = dados.placar_casa
     jogo.placar_visitante = dados.placar_visitante
 
+    # Define se o jogo foi finalizado baseado no argumento recebido
+    jogo.jogo_finalizado = dados.jogo_finalizado
+
     # Obtém os times do jogo
     time_casa = db.query(Time).filter(Time.id == jogo.time_casa_id).first()
     time_visitante = db.query(Time).filter(Time.id == jogo.time_visitante_id).first()

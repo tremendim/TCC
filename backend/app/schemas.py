@@ -15,6 +15,8 @@ class RespostaJogador(BaseModel):
     idade: int
     posicao: str
     gols_realizados: int = 0
+    cartoes_amarelos: int  
+    cartoes_vermelhos: int  
     imagem: Optional[str] = None
 
     class Config:
@@ -32,6 +34,7 @@ class TimeResposta(BaseModel):
     vitorias: int
     derrotas: int
     empates: int
+    pontuacao: int
     jogadores: List[RespostaJogador] = []  # Referência ao schema RespostaJogador
 
     class Config:
@@ -76,6 +79,7 @@ class JogoResposta(JogoBase):
     id: int
     placar_casa: Optional[int] = None
     placar_visitante: Optional[int] = None
+    jogo_finalizado: bool
 
     class Config:
         orm_mode = True
@@ -89,3 +93,4 @@ class AtualizarPlacarComGols(BaseModel):
     gols: List[GolDetalhado]
     placar_casa: int
     placar_visitante: int
+    jogo_finalizado: Optional[bool] = False

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Table, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -41,6 +41,8 @@ class Jogador(Base):
     id_time = Column(Integer, ForeignKey("times.id"))  # Relação com o time (chave estrangeira)
     gols_realizados = Column(Integer, default=0)  # Gols realizados pelo jogador
     imagem = Column(String, nullable=True)
+    cartoes_amarelos = Column(Integer, default=0) 
+    cartoes_vermelhos = Column(Integer, default=0)  
 
     # Relação para acessar o time do jogador
     time = relationship("Time", back_populates="jogadores")
@@ -56,6 +58,7 @@ class Jogo(Base):
     placar_visitante = Column(Integer, nullable=True)
     time_ganhador = Column(Integer, ForeignKey("times.id"))
     time_derrotado = Column(Integer, ForeignKey("times.id"))
+    jogo_finalizado = Column(Boolean, default=False)
     
     # Relacionamentos com os times
     time_casa = relationship("Time", foreign_keys=[time_casa_id])

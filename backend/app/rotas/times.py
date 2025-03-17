@@ -23,7 +23,7 @@ def obter_sessao():
 
 @router.post("/", response_model=TimeResposta)
 def criar_time(time: TimeCriar, db: Session = Depends(obter_sessao)):
-    novo_time = Time(nome=time.nome, divisao=time.divisao)
+    novo_time = Time(nome=time.nome, divisao=time.divisao,sigla=time.sigla)
     db.add(novo_time)
     db.commit()
     db.refresh(novo_time)

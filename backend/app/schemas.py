@@ -6,7 +6,7 @@ from typing import List, Optional
 class TimeCriar(BaseModel):
     nome: str
     divisao: str
-    sigla: str = Field(..., min_length=4, max_length=4)
+    sigla: str = Field(..., min_length=3, max_length=4)
 
 # Schema para resposta de um jogador
 class RespostaJogador(BaseModel):

@@ -44,7 +44,7 @@ def obter_jogo(jogo_id: int, db: Session = Depends(get_db)):
     return jogo
 
 
-@router.put("/atualizar-placar", response_model=JogoResposta)
+@router.put("/atualizar-placar")
 def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db)):
     jogo = db.query(Jogo).filter(Jogo.id == dados.jogo_id).first()
     if not jogo:
@@ -91,6 +91,28 @@ def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db
         jogo.time_ganhador = None  # Sem vencedor
         jogo.time_derrotado = None  # Sem derrotado
 
+    # Limpa os gols anteriores do jogo (caso seja uma atualização)
+    db.execute(gols_jogo.delete().where(gols_jogo.c.jogo_id == jogo.id))
+
+    # Verifica se há gols antes de processar
+    if dados.gols:
+        for gol in dados.gols:
+            jogador = db.query(Jogador).filter(Jogador.id == gol.jogador_id).first()
+            if not jogador:
+                raise HTTPException(status_code=404, detail=f"Jogador {gol.jogador_id} não encontrado")
+
+            # Adiciona os gols na tabela intermediária
+            db.execute(gols_jogo.insert().values(
+                jogo_id=jogo.id,
+                jogador_id=gol.jogador_id,
+                quantidade=gol.quantidade
+            ))
+
+            # Atualiza os gols do jogador
+            jogador.gols_realizados += gol.quantidade
+            db.add(jogador)
+
+    # Salva todas as mudanças no banco de dados
     db.commit()
     db.refresh(jogo)
 

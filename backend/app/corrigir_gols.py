@@ -1,22 +1,30 @@
-from sqlalchemy.orm import Session
-from database import SessionLocal
-from models import Jogo
+import sqlite3
 
-def reset_jogos_finalizados():
-    db: Session = SessionLocal()
+# Caminho do banco de dados
+db_path = "campeonato.db"  # Substitua pelo caminho correto
 
-    try:
-        # Atualiza todos os jogos, definindo jogo_finalizado como False
-        db.query(Jogo).update({"jogo_finalizado": False})
-        db.commit()
-        print("✅ Todos os jogos foram marcados como não finalizados (False)!")
+# Conectar ao banco de dados SQLite
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
 
-    except Exception as e:
-        db.rollback()
-        print(f"❌ Erro ao resetar jogos finalizados: {e}")
+try:
+    # Resetar os gols dos times
+    cursor.execute("UPDATE times SET gols_feitos = 0, gols_sofridos = 0")
 
-    finally:
-        db.close()
+    # Excluir o time com id = 4
+    cursor.execute("DELETE FROM times WHERE id = 4")
 
-if __name__ == "__main__":
-    reset_jogos_finalizados()
+    # Atualizar as siglas dos times 1 e 2
+    cursor.execute("UPDATE times SET sigla = 'TJP' WHERE id = 1")
+    cursor.execute("UPDATE times SET sigla = 'CHB' WHERE id = 2")
+
+    # Confirmar as alterações
+    conn.commit()
+    print("✅ Modificações realizadas com sucesso!")
+
+except Exception as e:
+    conn.rollback()
+    print(f"❌ Erro ao modificar o banco de dados: {e}")
+
+finally:
+    conn.close()

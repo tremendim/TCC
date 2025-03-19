@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from database import get_db
 from models import Jogo, Time,Jogador, gols_jogo
@@ -30,8 +30,32 @@ def criar_jogo(jogo: JogoCriar, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[JogoResposta])
 def listar_jogos(db: Session = Depends(get_db)):
-    jogos = db.query(Jogo).all()
-    return jogos
+    jogos = (
+        db.query(Jogo)
+        .options(
+            joinedload(Jogo.time_casa),  # Carrega o time da casa
+            joinedload(Jogo.time_visitante),  # Carrega o time visitante
+            joinedload(Jogo.vencedor),  # Carrega o time vencedor
+            joinedload(Jogo.perdedor)  # Carrega o time perdedor
+        )
+        .all()
+    )
+
+    # Ajustar a saída para retornar os nomes dos times
+    return [
+        {
+            "id": jogo.id,
+            "time_casa": jogo.time_casa.nome if jogo.time_casa else "Desconhecido",
+            "time_visitante": jogo.time_visitante.nome if jogo.time_visitante else "Desconhecido",
+            "data_hora": jogo.data_hora,
+            "placar_casa": jogo.placar_casa,
+            "placar_visitante": jogo.placar_visitante,
+            "time_ganhador": jogo.vencedor.nome if jogo.vencedor else None,
+            "time_derrotado": jogo.perdedor.nome if jogo.perdedor else None,
+            "jogo_finalizado": jogo.jogo_finalizado,
+        }
+        for jogo in jogos
+    ]
 
 @router.get("/{jogo_id}", response_model=JogoResposta)
 def obter_jogo(jogo_id: int, db: Session = Depends(get_db)):

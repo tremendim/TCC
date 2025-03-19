@@ -75,10 +75,15 @@ class JogoBase(BaseModel):
 class JogoCriar(JogoBase):
     pass
 
-class JogoResposta(JogoBase):
+class JogoResposta(BaseModel):
     id: int
+    time_casa: str  # Agora retorna o nome do time
+    time_visitante: str  # Agora retorna o nome do time
+    data_hora: datetime
     placar_casa: Optional[int] = None
     placar_visitante: Optional[int] = None
+    time_ganhador: Optional[str] = None  # Nome do time vencedor
+    time_derrotado: Optional[str] = None  # Nome do time perdedor
     jogo_finalizado: bool
 
     class Config:

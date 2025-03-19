@@ -46,7 +46,9 @@ def listar_jogos(db: Session = Depends(get_db)):
         {
             "id": jogo.id,
             "time_casa": jogo.time_casa.nome if jogo.time_casa else "Desconhecido",
+            "imagem_time_casa": jogo.time_casa.imagem if jogo.time_casa else None,
             "time_visitante": jogo.time_visitante.nome if jogo.time_visitante else "Desconhecido",
+            "imagem_time_visitante": jogo.time_visitante.imagem if jogo.time_visitante else None,
             "data_hora": jogo.data_hora,
             "placar_casa": jogo.placar_casa,
             "placar_visitante": jogo.placar_visitante,

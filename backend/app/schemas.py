@@ -77,10 +77,14 @@ class JogoCriar(JogoBase):
 
 class JogoResposta(BaseModel):
     id: int
+    time_casa_id: int  # ID do time da casa
     time_casa: str  # Agora retorna o nome do time
     imagem_time_casa: Optional[str]  # URL da imagem do time da casa
+
+    time_visitante_id: int  # ID do time visitante
     time_visitante: str  # Agora retorna o nome do time
     imagem_time_visitante: Optional[str]  # URL da imagem do time visitante
+
     data_hora: datetime
     placar_casa: Optional[int] = None
     placar_visitante: Optional[int] = None

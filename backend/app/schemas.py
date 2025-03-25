@@ -97,7 +97,28 @@ class JogoResposta(BaseModel):
 
 class GolDetalhado(BaseModel):
     jogador_id: int
+    jogador_nome: str
+    time_sigla: str
     quantidade: int
+
+class JogoDetalhado(BaseModel):
+    id: int
+    time_casa_id: int
+    time_casa: str
+    imagem_time_casa: Optional[str]
+    time_visitante_id: int
+    time_visitante: str
+    imagem_time_visitante: Optional[str]
+    data_hora: datetime
+    placar_casa: Optional[int] = None
+    placar_visitante: Optional[int] = None
+    time_ganhador: Optional[str] = None
+    time_derrotado: Optional[str] = None
+    jogo_finalizado: bool
+    gols: List[GolDetalhado]  # Adicionando os gols no retorno
+
+    class Config:
+        orm_mode = True
 
 class AtualizarPlacarComGols(BaseModel):
     jogo_id: int

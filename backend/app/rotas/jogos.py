@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from typing import List
 from database import get_db
 from models import Jogo, Time,Jogador, gols_jogo
-from schemas import JogoCriar, JogoResposta, AtualizarPlacarComGols
+from schemas import JogoCriar, JogoResposta, AtualizarPlacarComGols, JogoDetalhado
 
 router = APIRouter()
 
@@ -46,11 +46,11 @@ def listar_jogos(db: Session = Depends(get_db)):
         {
             "id": jogo.id,
             "time_casa_id": jogo.time_casa.id if jogo.time_casa else None,
-            "time_casa": jogo.time_casa.nome if jogo.time_casa else "Desconhecido",
+            "time_casa": jogo.time_casa.sigla if jogo.time_casa else "Desconhecido",
             "imagem_time_casa": jogo.time_casa.imagem if jogo.time_casa else None,
 
             "time_visitante_id": jogo.time_visitante.id if jogo.time_visitante else None,
-            "time_visitante": jogo.time_visitante.nome if jogo.time_visitante else "Desconhecido",
+            "time_visitante": jogo.time_visitante.sigla if jogo.time_visitante else "Desconhecido",
             "imagem_time_visitante": jogo.time_visitante.imagem if jogo.time_visitante else None,
 
             "data_hora": jogo.data_hora,
@@ -63,16 +63,58 @@ def listar_jogos(db: Session = Depends(get_db)):
         for jogo in jogos
     ]
 
-@router.get("/{jogo_id}", response_model=JogoResposta)
-def obter_jogo(jogo_id: int, db: Session = Depends(get_db)):
-    # Busca o jogo no banco de dados
-    jogo = db.query(Jogo).filter(Jogo.id == jogo_id).first()
+@router.get("/{id}", response_model=JogoDetalhado)
+def obter_jogo(id: int, db: Session = Depends(get_db)):
+    jogo = (
+        db.query(Jogo)
+        .options(
+            joinedload(Jogo.time_casa),
+            joinedload(Jogo.time_visitante),
+            joinedload(Jogo.vencedor),
+            joinedload(Jogo.perdedor),
+        )
+        .filter(Jogo.id == id)
+        .first()
+    )
+
     if not jogo:
         raise HTTPException(status_code=404, detail="Jogo não encontrado")
 
-    # Retorna o jogo sem os detalhes dos gols
-    return jogo
+    # Buscar os gols do jogo
+    gols = (
+        db.query(Jogador.id, Jogador.nome, Jogador.id_time, gols_jogo.c.quantidade)
+        .join(gols_jogo, Jogador.id == gols_jogo.c.jogador_id)
+        .filter(gols_jogo.c.jogo_id == jogo.id)
+        .all()
+    )
 
+    # Buscar a sigla do time corretamente no modelo `Time`
+    gols_formatados = [
+        {
+            "jogador_id": gol[0],
+            "jogador_nome": gol[1],
+            "time_sigla": db.query(Time.sigla).filter(Time.id == gol[2]).scalar(),
+            "quantidade": gol[3],
+        }
+        for gol in gols
+    ]
+
+    return {
+        "id": jogo.id,
+        "time_casa_id": jogo.time_casa.id if jogo.time_casa else None,
+        "time_casa": jogo.time_casa.sigla if jogo.time_casa else "N/A",
+        "imagem_time_casa": jogo.time_casa.imagem if jogo.time_casa else None,
+        "time_visitante_id": jogo.time_visitante.id if jogo.time_visitante else None,
+        "time_visitante": jogo.time_visitante.sigla if jogo.time_visitante else "N/A",
+        "imagem_time_visitante": jogo.time_visitante.imagem if jogo.time_visitante else None,
+        "data_hora": jogo.data_hora,
+        "placar_casa": jogo.placar_casa,
+        "placar_visitante": jogo.placar_visitante,
+        "time_ganhador": jogo.vencedor.sigla if jogo.vencedor else None,
+        "time_derrotado": jogo.perdedor.sigla if jogo.perdedor else None,
+        "jogo_finalizado": jogo.jogo_finalizado,
+        "gols": gols_formatados,
+    }
 
 @router.put("/atualizar-placar")
 def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db)):

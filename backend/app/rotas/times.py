@@ -6,6 +6,7 @@ from schemas import TimeCriar, TimeResposta, ListaTimesResposta
 from database import SessionLocal
 import shutil
 import os
+from typing import List
 
 
 # Criando o roteador
@@ -46,12 +47,19 @@ def classificacao(db: Session = Depends(obter_sessao)):
     times = db.query(Time).order_by(Time.pontuacao.desc()).all()
     return times
 
+@router.get("/all", response_model=List[TimeResposta])
+def listar_timess(db: Session = Depends(obter_sessao)):
+    times = db.query(Time).all()
+    return times
+
 @router.get("/{id_time}", response_model=TimeResposta)
 def obter_time(id_time: int, db: Session = Depends(obter_sessao)):
     time = db.query(Time).filter(Time.id == id_time).first()
     if not time:
         raise HTTPException(status_code=404, detail="Time não encontrado")
     return time
+
+
 
 @router.delete("/{id_time}")
 def deletar_time(id_time: int, db: Session = Depends(obter_sessao)):

@@ -95,6 +95,10 @@ class JogoResposta(BaseModel):
     class Config:
         orm_mode = True
 
+class GolEntrada(BaseModel):
+    jogador_id: int
+    quantidade: int
+
 class GolDetalhado(BaseModel):
     jogador_id: int
     jogador_nome: str
@@ -122,7 +126,7 @@ class JogoDetalhado(BaseModel):
 
 class AtualizarPlacarComGols(BaseModel):
     jogo_id: int
-    gols: List[GolDetalhado]
+    gols: List[GolEntrada]
     placar_casa: int
     placar_visitante: int
     jogo_finalizado: Optional[bool] = False

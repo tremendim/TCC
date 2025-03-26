@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from models import Time
+from models import Time, Jogo
 from schemas import TimeCriar, TimeResposta, ListaTimesResposta
 from database import SessionLocal
 import shutil
@@ -108,3 +108,12 @@ def obter_imagem_time(id_time: int, db: Session = Depends(obter_sessao)):
     # Retorna a imagem como uma resposta de arquivo
     return FileResponse(time.imagem)
 
+#Rota /GET responsavel para listar o historio de jogos de um time
+@router.get("/{id}/jogos")
+def obter_jogos_do_time(id: int, db: Session = Depends(obter_sessao)):
+    jogos = (
+        db.query(Jogo)
+        .filter((Jogo.time_casa_id == id) | (Jogo.time_visitante_id == id))
+        .all()
+    )
+    return jogos

@@ -7,7 +7,7 @@ from schemas import JogoCriar, JogoResposta, AtualizarPlacarComGols, JogoDetalha
 
 router = APIRouter()
 
-
+#Rota responsavel para a criação de um jogo
 @router.post("/", response_model=JogoResposta)
 def criar_jogo(jogo: JogoCriar, db: Session = Depends(get_db)):
     # Verifica se os times existem
@@ -28,6 +28,7 @@ def criar_jogo(jogo: JogoCriar, db: Session = Depends(get_db)):
     db.refresh(novo_jogo)
     return novo_jogo
 
+#Rota /GET responsavel para listar os jogos
 @router.get("/", response_model=List[JogoResposta])
 def listar_jogos(db: Session = Depends(get_db)):
     jogos = (
@@ -63,6 +64,7 @@ def listar_jogos(db: Session = Depends(get_db)):
         for jogo in jogos
     ]
 
+#Rota /Get responsavel para listar um jogo especifico
 @router.get("/{id}", response_model=JogoDetalhado)
 def obter_jogo(id: int, db: Session = Depends(get_db)):
     jogo = (
@@ -116,6 +118,7 @@ def obter_jogo(id: int, db: Session = Depends(get_db)):
         "gols": gols_formatados,
     }
 
+#Rota /PUT responsavel por atualizar as informações de um jogo.
 @router.put("/atualizar-placar")
 def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db)):
     jogo = db.query(Jogo).filter(Jogo.id == dados.jogo_id).first()
@@ -189,3 +192,13 @@ def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db
     db.refresh(jogo)
 
     return jogo
+
+#Rota /GET responsavel para listar o historio de jogos de um time
+@router.get("/{id}/jogos")
+def obter_jogos_do_time(id: int, db: Session = Depends(get_db)):
+    jogos = (
+        db.query(Jogo)
+        .filter((Jogo.time_casa_id == id) | (Jogo.time_visitante_id == id))
+        .all()
+    )
+    return jogos

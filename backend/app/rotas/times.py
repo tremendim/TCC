@@ -1,12 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from models import Time, Jogo
+from sqlalchemy import desc
+from models import Time, Jogo, Jogador
 from schemas import TimeCriar, TimeResposta, ListaTimesResposta
 from database import SessionLocal
-import shutil
-import os
-from typing import List
+from typing import List, Optional
 
 
 # Criando o roteador
@@ -31,16 +30,40 @@ def criar_time(time: TimeCriar, db: Session = Depends(obter_sessao)):
     return novo_time
 
 
-@router.get("/", response_model=ListaTimesResposta)
-def listar_times(db: Session = Depends(obter_sessao)):
-    # Busca todos os times no banco de dados
-    times = db.query(Time).all()
-    
-    # Retorna a quantidade total de times e a lista de times
-    return {
-        "total_times": len(times),  # Quantidade total de times
-        "times": times  # Lista de times
-    }
+@router.get("/", response_model=List[TimeResposta])
+def listar_times(
+    db: Session = Depends(obter_sessao),
+    nome: Optional[str] = Query(None, description="Filtrar pelo nome do time"),
+    sigla: Optional[str] = Query(None, description="Filtrar pela sigla do time"),
+    pontuacao_min: Optional[int] = Query(None, description="Pontuação mínima"),
+    pontuacao_max: Optional[int] = Query(None, description="Pontuação máxima"),
+    ordem: Optional[str] = Query(None, description="Ordenar por: pontuacao, vitorias, saldo_gols")
+):
+    query = db.query(Time)
+
+    # 🔍 Aplicando filtros
+    if nome:
+        query = query.filter(Time.nome.ilike(f"%{nome}%"))
+    if sigla:
+        query = query.filter(Time.sigla.ilike(f"%{sigla}%"))
+    if pontuacao_min is not None:
+        query = query.filter(Time.pontuacao >= pontuacao_min)
+    if pontuacao_max is not None:
+        query = query.filter(Time.pontuacao <= pontuacao_max)
+
+    # 📊 Ordenação
+    if ordem:
+        if ordem == "pontuacao":
+            query = query.order_by(desc(Time.pontuacao))
+        elif ordem == "vitorias":
+            query = query.order_by(desc(Time.vitorias))
+        elif ordem == "saldo_gols":
+            query = query.order_by(desc(Time.gols_feitos - Time.gols_sofridos))
+
+    times = query.all()
+
+    # 🔄 Convertendo os objetos corretamente para TimeResposta
+    return times
 
 @router.get("/classificacao")
 def classificacao(db: Session = Depends(obter_sessao)):
@@ -70,43 +93,6 @@ def deletar_time(id_time: int, db: Session = Depends(obter_sessao)):
     db.commit()
     return {"mensagem": "Time deletado com sucesso"}
 
-#Configuração do Diretorio para salvar as imagens
-IMAGENS_DIR = "imagens"
-os.makedirs(IMAGENS_DIR, exist_ok=True)
-
-@router.post("/{id_time}/upload-imagem")
-def upload_imagem_time(
-    id_time: int,
-    imagem: UploadFile = File(...),
-    db: Session = Depends(obter_sessao)
-):
-    # Verifica se o time existe
-    time = db.query(Time).filter(Time.id == id_time).first()
-    if not time:
-        raise HTTPException(status_code=404, detail="Time não encontrado")
-
-    # Salva a imagem no diretório
-    caminho_imagem = os.path.join(IMAGENS_DIR, f"time_{id_time}.jpg")
-    with open(caminho_imagem, "wb") as buffer:
-        shutil.copyfileobj(imagem.file, buffer)
-
-    # Atualiza o caminho da imagem no banco de dados
-    time.imagem = caminho_imagem
-    db.commit()
-    db.refresh(time)
-
-    return {"mensagem": "Imagem do time atualizada com sucesso", "caminho_imagem": caminho_imagem}
-
-@router.get("/{id_time}/imagem")
-def obter_imagem_time(id_time: int, db: Session = Depends(obter_sessao)):
-
-    # Busca o time no banco de dados
-    time = db.query(Time).filter(Time.id == id_time).first()
-    if not time or not time.imagem:
-        raise HTTPException(status_code=404, detail="Imagem não encontrada")
-
-    # Retorna a imagem como uma resposta de arquivo
-    return FileResponse(time.imagem)
 
 #Rota /GET responsavel para listar o historio de jogos de um time
 @router.get("/{id}/jogos")

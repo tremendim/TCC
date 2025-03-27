@@ -73,7 +73,9 @@ class JogoBase(BaseModel):
     data_hora: datetime
 
 class JogoCriar(JogoBase):
-    pass
+    time_casa_id: int
+    time_visitante_id: int
+    data_hora: datetime
 
 class JogoResposta(BaseModel):
     id: int

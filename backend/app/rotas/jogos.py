@@ -9,7 +9,7 @@ from datetime import date, timedelta
 router = APIRouter()
 
 #Rota responsavel para a criação de um jogo
-@router.post("/", response_model=JogoResposta)
+@router.post("/", response_model=JogoCriar)
 def criar_jogo(jogo: JogoCriar, db: Session = Depends(get_db)):
     # Verifica se os times existem
     time_casa = db.query(Time).filter(Time.id == jogo.time_casa_id).first()

@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from typing import List
 from database import get_db
 from models import Jogo, Time,Jogador, gols_jogo
 from schemas import JogoCriar, JogoResposta, AtualizarPlacarComGols, JogoDetalhado
+from datetime import date, timedelta
 
 router = APIRouter()
 
@@ -30,19 +31,42 @@ def criar_jogo(jogo: JogoCriar, db: Session = Depends(get_db)):
 
 #Rota /GET responsavel para listar os jogos
 @router.get("/", response_model=List[JogoResposta])
-def listar_jogos(db: Session = Depends(get_db)):
-    jogos = (
-        db.query(Jogo)
-        .options(
-            joinedload(Jogo.time_casa),  # Carrega o time da casa
-            joinedload(Jogo.time_visitante),  # Carrega o time visitante
-            joinedload(Jogo.vencedor),  # Carrega o time vencedor
-            joinedload(Jogo.perdedor)  # Carrega o time perdedor
-        )
-        .all()
+def listar_jogos(
+    db: Session = Depends(get_db),
+    data: str = Query(None, description="Filtrar por data (YYYY-MM-DD)"),
+    periodo: str = Query(None, description="Filtrar por período: hoje, semana, mes")
+):
+    query = db.query(Jogo).options(
+        joinedload(Jogo.time_casa),
+        joinedload(Jogo.time_visitante),
+        joinedload(Jogo.vencedor),
+        joinedload(Jogo.perdedor)
     )
 
-    # Ajustar a saída para retornar os nomes dos times
+    # Filtrar por data específica
+    if data:
+        query = query.filter(
+            Jogo.data_hora >= f"{data} 00:00:00",
+            Jogo.data_hora <= f"{data} 23:59:59"
+        )
+
+    # Filtrar por período (hoje, semana, mês)
+    elif periodo:
+        hoje = date.today()
+        if periodo == "hoje":
+            query = query.filter(Jogo.data_hora >= hoje, Jogo.data_hora < hoje + timedelta(days=1))
+        elif periodo == "semana":
+            inicio_semana = hoje - timedelta(days=hoje.weekday())  # Segunda-feira
+            fim_semana = inicio_semana + timedelta(days=6)
+            query = query.filter(Jogo.data_hora >= inicio_semana, Jogo.data_hora <= fim_semana)
+        elif periodo == "mes":
+            inicio_mes = hoje.replace(day=1)
+            proximo_mes = (inicio_mes + timedelta(days=32)).replace(day=1)
+            query = query.filter(Jogo.data_hora >= inicio_mes, Jogo.data_hora < proximo_mes)
+
+    jogos = query.all()
+
+    # Retorno da resposta mantendo o formato original
     return [
         {
             "id": jogo.id,
@@ -193,12 +217,4 @@ def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db
 
     return jogo
 
-#Rota /GET responsavel para listar o historio de jogos de um time
-@router.get("/{id}/jogos")
-def obter_jogos_do_time(id: int, db: Session = Depends(get_db)):
-    jogos = (
-        db.query(Jogo)
-        .filter((Jogo.time_casa_id == id) | (Jogo.time_visitante_id == id))
-        .all()
-    )
-    return jogos
+

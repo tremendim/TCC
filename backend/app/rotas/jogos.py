@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_
 from typing import List
 from database import get_db
 from models import Jogo, Time,Jogador, gols_jogo
@@ -34,7 +35,8 @@ def criar_jogo(jogo: JogoCriar, db: Session = Depends(get_db)):
 def listar_jogos(
     db: Session = Depends(get_db),
     data: str = Query(None, description="Filtrar por data (YYYY-MM-DD)"),
-    periodo: str = Query(None, description="Filtrar por período: hoje, semana, mes")
+    periodo: str = Query(None, description="Filtrar por período: hoje, semana, mes"),
+    time_id: int = Query(None, description="Filtrar jogos pelo ID do time")
 ):
     query = db.query(Jogo).options(
         joinedload(Jogo.time_casa),
@@ -63,6 +65,10 @@ def listar_jogos(
             inicio_mes = hoje.replace(day=1)
             proximo_mes = (inicio_mes + timedelta(days=32)).replace(day=1)
             query = query.filter(Jogo.data_hora >= inicio_mes, Jogo.data_hora < proximo_mes)
+
+    # Filtrar por ID do time (caso o usuário informe um time específico)
+    if time_id:
+        query = query.filter(or_(Jogo.time_casa_id == time_id, Jogo.time_visitante_id == time_id))
 
     jogos = query.all()
 

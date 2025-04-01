@@ -12,11 +12,17 @@ router = APIRouter()
 #Rota responsavel para a criação de um jogo
 @router.post("/", response_model=JogoCriar)
 def criar_jogo(jogo: JogoCriar, db: Session = Depends(get_db)):
+
+    #RN09: O jogo só pode ser agendado caso ambos times tiverem cadastrados no sistema
     # Verifica se os times existem
     time_casa = db.query(Time).filter(Time.id == jogo.time_casa_id).first()
     time_visitante = db.query(Time).filter(Time.id == jogo.time_visitante_id).first()
     if not time_casa or not time_visitante:
         raise HTTPException(status_code=404, detail="Um ou ambos os times não foram encontrados")
+
+    #RN 08: Um time não pode jogar contra ele mesmo
+    if jogo.time_casa_id == jogo.time_visitante_id:
+        raise HTTPException(status_code=400, detail="Um time não pode jogar contra ele mesmo.")
 
     novo_jogo = Jogo(
         time_casa_id=jogo.time_casa_id,

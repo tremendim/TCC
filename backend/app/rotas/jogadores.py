@@ -19,6 +19,13 @@ def obter_sessao():
 
 @router.post("/", response_model=RespostaJogador)
 def criar_jogador(jogador: CriarJogador, db: Session = Depends(obter_sessao)):
+
+    #RN04 Cada jogador deve esta vinculado a apenas um time
+    #Validação se esse jogador já está cadastrado em algum outro time
+    jogador_existente = db.query(Jogador).filter(Jogador.nome == jogador.nome).first()
+    if jogador_existente:
+        raise HTTPException(status_code=400, detail="Este jogador já está vinculado a um time.")
+    
     novo_jogador = Jogador(
         nome=jogador.nome,
         idade=jogador.idade,

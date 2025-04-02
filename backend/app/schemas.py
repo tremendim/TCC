@@ -6,6 +6,7 @@ from typing import List, Optional
 class TimeCriar(BaseModel):
     nome: str
     divisao: str
+    #Atende a RN02
     sigla: str = Field(..., min_length=3, max_length=4)
 
 # Schema para resposta de um jogador

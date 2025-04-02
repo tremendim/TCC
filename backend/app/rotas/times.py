@@ -89,6 +89,18 @@ def deletar_time(id_time: int, db: Session = Depends(obter_sessao)):
     time = db.query(Time).filter(Time.id == id_time).first()
     if not time:
         raise HTTPException(status_code=404, detail="Time não encontrado")
+    
+    #RN03 Um time não pode ser excluído se houver algum jogo registrado com sua participação
+    # Validação se o time já particiou de algum jogo o filtro passa por toda query jogos e valida se o time casa ID ou Visitante
+    # é igual ao time deletado
+    verifica_participacao = db.query(Jogo).filter(
+        (Jogo.time_casa_id == id_time) | (Jogo.time_visitante_id == id_time)
+    ).first()
+
+    if verifica_participacao:
+        raise HTTPException(status_code=400, detail="O time não pode ser excluído, pois já participou de jogos.")
+
+
     db.delete(time)
     db.commit()
     return {"mensagem": "Time deletado com sucesso"}

@@ -23,6 +23,14 @@ def obter_sessao():
 
 @router.post("/", response_model=TimeResposta)
 def criar_time(time: TimeCriar, db: Session = Depends(obter_sessao)):
+
+    #RN04 Cada jogador deve esta vinculado a apenas um time
+    #Validação se esse jogador já está cadastrado em algum outro time
+    time_existente = db.query(Time).filter(Time.nome == time.nome).first()
+    if time_existente:
+        raise HTTPException(status_code=400, detail="Este time já existe")
+
+
     novo_time = Time(nome=time.nome, divisao=time.divisao,sigla=time.sigla)
     db.add(novo_time)
     db.commit()

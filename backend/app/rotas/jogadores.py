@@ -26,6 +26,11 @@ def criar_jogador(jogador: CriarJogador, db: Session = Depends(obter_sessao)):
     if jogador_existente:
         raise HTTPException(status_code=400, detail="Este jogador já está vinculado a um time.")
     
+    #RN05: O nome do jogador não pode estar em branco
+    if not jogador.nome.strip():
+        raise HTTPException(status_code=400, detail="O nome do jogador não pode estar em branco.")
+
+    
     novo_jogador = Jogador(
         nome=jogador.nome,
         idade=jogador.idade,

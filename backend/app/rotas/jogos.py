@@ -10,7 +10,7 @@ from datetime import date, timedelta
 router = APIRouter()
 
 #Rota responsavel para a criação de um jogo
-@router.post("/", response_model=JogoBase)
+@router.post("/")
 def criar_jogo(jogo: JogoCriar, db: Session = Depends(get_db)):
 
     #RN09: O jogo só pode ser agendado caso ambos times tiverem cadastrados no sistema

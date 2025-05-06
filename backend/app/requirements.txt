@@ -6,3 +6,4 @@ alembic==1.11.2
 python-dotenv==1.0.0
 python-multipart ==0.0.20
 firebase-admin == 6.6.0
+datetime = 5.5

@@ -4,13 +4,13 @@ from sqlalchemy import or_
 from typing import List
 from database import get_db
 from models import Jogo, Time,Jogador, gols_jogo
-from schemas import JogoCriar, JogoResposta, AtualizarPlacarComGols, JogoDetalhado
+from schemas import JogoCriar, JogoResposta, AtualizarPlacarComGols, JogoDetalhado, JogoBase
 from datetime import date, timedelta
 
 router = APIRouter()
 
 #Rota responsavel para a criação de um jogo
-@router.post("/", response_model=JogoResposta)
+@router.post("/", response_model=JogoBase)
 def criar_jogo(jogo: JogoCriar, db: Session = Depends(get_db)):
 
     #RN09: O jogo só pode ser agendado caso ambos times tiverem cadastrados no sistema

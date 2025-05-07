@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
 from sqlalchemy.orm import Session
-from models import Jogador, Time
+from models import Jogador, Time, gols_jogo
 from schemas import CriarJogador, AtualizarJogador, RespostaJogador
 from database import SessionLocal
 import shutil
@@ -71,3 +71,24 @@ def obter_jogador_time(id_time: int, db: Session = Depends(obter_sessao)):
     if not time:
         raise HTTPException(status_code=404, detail="Time não encontrado")
     return time.jogadores
+
+@router.delete("/{jogador_id}")
+def excluir_jogador(jogador_id: int, db: Session = Depends(obter_sessao)):
+    jogador = db.query(Jogador).filter(Jogador.id == jogador_id).first()
+
+    if not jogador:
+        raise HTTPException(status_code=404, detail="Jogador não encontrado.")
+
+    # 🔍 Verifica se o jogador participou de algum jogo
+    participacao = db.query(gols_jogo).filter(gols_jogo.c.jogador_id == jogador_id).first()
+
+    if participacao:
+        raise HTTPException(
+            status_code=400,
+            detail="Jogador não pode ser excluído pois participou de um ou mais jogos."
+        )
+
+    db.delete(jogador)
+    db.commit()
+
+    return {"message": "Jogador excluído com sucesso."}

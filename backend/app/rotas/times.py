@@ -6,6 +6,7 @@ from models import Time, Jogo, Jogador
 from schemas import TimeCriar, TimeResposta, ListaTimesResposta
 from database import SessionLocal
 from typing import List, Optional
+from collections import defaultdict
 
 
 # Criando o roteador
@@ -24,8 +25,8 @@ def obter_sessao():
 @router.post("/", response_model=TimeResposta)
 def criar_time(time: TimeCriar, db: Session = Depends(obter_sessao)):
 
-    #RN04 Cada jogador deve esta vinculado a apenas um time
-    #Validação se esse jogador já está cadastrado em algum outro time
+    #RN01:Todo time cadastrado deve possuir um nome único
+    #Validação se esse nome de time já está cadastrado
     time_existente = db.query(Time).filter(Time.nome == time.nome).first()
     if time_existente:
         raise HTTPException(status_code=400, detail="Este time já existe")
@@ -74,10 +75,14 @@ def listar_times(
     return times
 
 @router.get("/classificacao")
-def classificacao(db: Session = Depends(obter_sessao)):
-    times = db.query(Time).order_by(Time.pontuacao.desc()).all()
-    return times
+def classificacao_por_divisao(db: Session = Depends(obter_sessao)):
+    times = db.query(Time).order_by(Time.divisao, Time.pontuacao.desc()).all()
 
+    classificacao = defaultdict(list)
+    for time in times:
+        classificacao[time.divisao].append(time)
+
+    return classificacao
 @router.get("/all", response_model=List[TimeResposta])
 def listar_timess(db: Session = Depends(obter_sessao)):
     times = db.query(Time).all()

@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Query
 from sqlalchemy.orm import Session
 from models import Jogador, Time, gols_jogo
 from schemas import CriarJogador, AtualizarJogador, RespostaJogador
 from database import SessionLocal
+from typing import List, Optional
+from sqlalchemy import desc, asc
 import shutil
 import os
 
@@ -45,8 +47,47 @@ def criar_jogador(jogador: CriarJogador, db: Session = Depends(obter_sessao)):
 
 #Rota /jogadores (Para listar os jogadores)
 @router.get("/", response_model=list[RespostaJogador])
-def listar_jogadores(db: Session = Depends(obter_sessao)):
-     return db.query(Jogador).all()
+def listar_jogadores(
+    nome: Optional[str] = Query(None),
+    idade_min: Optional[int] = Query(None),
+    idade_max: Optional[int] = Query(None),
+    posicao: Optional[str] = Query(None),
+    ordenar_por: Optional[str] = Query(
+        None,
+        description="Ordenar por: gols, amarelos, vermelhos"
+    ),
+    db: Session = Depends(obter_sessao)
+):
+    query = db.query(Jogador)
+
+    if nome:
+        query = query.filter(Jogador.nome.ilike(f"%{nome}%"))
+
+    if idade_min is not None:
+        query = query.filter(Jogador.idade >= idade_min)
+
+    if idade_max is not None:
+        query = query.filter(Jogador.idade <= idade_max)
+
+    if posicao:
+        query = query.filter(Jogador.posicao.ilike(f"%{posicao}%"))
+
+    # 🔁 Ordenação dinâmica
+    if ordenar_por == "gols":
+        query = query.order_by(desc(Jogador.gols_realizados))
+    elif ordenar_por == "amarelos":
+        query = query.order_by(desc(Jogador.cartoes_amarelos))
+    elif ordenar_por == "vermelhos":
+        query = query.order_by(desc(Jogador.cartoes_vermelhos))
+    if ordenar_por == "golsAsc":
+        query = query.order_by(asc(Jogador.gols_realizados))
+    elif ordenar_por == "amarelosAsc":
+        query = query.order_by(asc(Jogador.cartoes_amarelos))
+    elif ordenar_por == "vermelhosAsc":
+        query = query.order_by(asc(Jogador.cartoes_vermelhos))
+
+    jogadores = query.all()
+    return jogadores
 
 
 #Buscar um jogador por ID

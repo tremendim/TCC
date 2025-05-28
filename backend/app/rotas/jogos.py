@@ -161,6 +161,27 @@ def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db
     if not jogo:
         raise HTTPException(status_code=404, detail="Jogo não encontrado")
 
+     # ✅ Soma total de gols informados
+    total_gols_jogadores = sum(gol.quantidade for gol in dados.gols)
+    total_placar = dados.placar_casa + dados.placar_visitante
+
+    if total_gols_jogadores != total_placar:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Total de gols dos jogadores ({total_gols_jogadores}) não bate com o placar informado ({total_placar})."
+        )
+
+    # ✅ Verifica se todos os jogadores pertencem a um dos dois times
+    for gol in dados.gols:
+        jogador = db.query(Jogador).filter(Jogador.id == gol.jogador_id).first()
+        if not jogador:
+            raise HTTPException(status_code=404, detail=f"Jogador {gol.jogador_id} não encontrado")
+
+        if jogador.id_time not in [jogo.time_casa_id, jogo.time_visitante_id]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"O jogador '{jogador.nome}' não pertence a nenhum dos times que jogaram essa partida."
+            )
     # Define o placar final
     jogo.placar_casa = dados.placar_casa
     jogo.placar_visitante = dados.placar_visitante

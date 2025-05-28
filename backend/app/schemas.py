@@ -14,6 +14,7 @@ class RespostaJogador(BaseModel):
     id: int
     nome: str
     idade: int
+    id_time: int
     posicao: str
     gols_realizados: int = 0
     cartoes_amarelos: int  
@@ -62,6 +63,9 @@ class AtualizarJogador(BaseModel):
     idade: Optional[int]
     posicao: Optional[str]
     id_time: Optional[int]
+    imagem: Optional[str]
+    cartoes_amarelos: Optional[int]
+    cartoes_vermelhos: Optional[int]
 
 class GolsJogo(BaseModel):
     jogador_id: int

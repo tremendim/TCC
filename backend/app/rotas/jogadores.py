@@ -113,6 +113,28 @@ def obter_jogador_time(id_time: int, db: Session = Depends(obter_sessao)):
         raise HTTPException(status_code=404, detail="Time não encontrado")
     return time.jogadores
 
+@router.put("/{jogador_id}")
+def atualizar_jogador(jogador_id: int,dados: AtualizarJogador,db: Session = Depends(obter_sessao)):
+    jogador = db.query(Jogador).filter(Jogador.id == jogador_id).first()
+
+    if not jogador:
+        raise HTTPException(status_code=404, detail="Jogador não encontrado.")
+
+    # Validação: time existe (se fornecido)
+    if dados.id_time is not None:
+        time = db.query(Time).filter(Time.id == dados.id_time).first()
+        if not time:
+            raise HTTPException(status_code=404, detail="Time informado não existe.")
+
+    for key, value in dados.dict(exclude_unset=True).items():
+        setattr(jogador, key, value)
+
+    db.commit()
+    db.refresh(jogador)
+
+    return {"mensagem": "Jogador atualizado com sucesso!", "jogador": jogador.id}
+
+
 @router.delete("/{jogador_id}")
 def excluir_jogador(jogador_id: int, db: Session = Depends(obter_sessao)):
     jogador = db.query(Jogador).filter(Jogador.id == jogador_id).first()
@@ -133,3 +155,4 @@ def excluir_jogador(jogador_id: int, db: Session = Depends(obter_sessao)):
     db.commit()
 
     return {"message": "Jogador excluído com sucesso."}
+

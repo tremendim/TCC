@@ -1,15 +1,23 @@
 import firebase_admin
 from firebase_admin import credentials, storage
 import os
+import json
+from dotenv import load_dotenv
 
-# Caminho do arquivo JSON da chave privada
-FIREBASE_CREDENTIALS = "firebase-adminsdk.json"
+load_dotenv()
 
-# Inicializa o Firebase se ainda não estiver inicializado
+# Carrega as credenciais do Firebase a partir da variável de ambiente
+firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
+
+if not firebase_credentials_json:
+    raise ValueError("A variável de ambiente FIREBASE_CREDENTIALS_JSON não foi definida.")
+
+cred_dict = json.loads(firebase_credentials_json)
+cred = credentials.Certificate(cred_dict)
+
 if not firebase_admin._apps:
-    cred = credentials.Certificate(FIREBASE_CREDENTIALS)
     firebase_admin.initialize_app(cred, {
-        "storageBucket": "copao-2af37.firebasestorage.app"
+        "storageBucket": "copao-2af37.firebasestorage.app"  # Verifique se este valor está correto
     })
 
 # Função para enviar imagens ao Firebase Storage

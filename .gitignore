@@ -1,0 +1,10 @@
+# Firebase
+firebase-adminsdk.json
+
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/

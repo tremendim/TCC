@@ -1,30 +1,40 @@
+# backend/app/alterar_divisao_times.py
+
 import sqlite3
 
-# Caminho do banco de dados
-db_path = "campeonato.db"  # Substitua pelo caminho correto
+# Caminho para o seu banco de dados
+db_path = "campeonato.db"
+
+# IDs dos times que serão alterados
+ids_para_alterar = (1, 2)
+nova_divisao = "B"
 
 # Conectar ao banco de dados SQLite
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 try:
-    # Resetar os gols dos times
-    cursor.execute("UPDATE times SET gols_feitos = 0, gols_sofridos = 0")
+    # O comando UPDATE irá alterar a coluna 'divisao'
+    # para os times cujos IDs estão na lista (1, 2)
+    comando_sql = "UPDATE times SET divisao = ? WHERE id IN (?, ?)"
 
-    # Excluir o time com id = 4
-    cursor.execute("DELETE FROM times WHERE id = 4")
+    # Executa o comando com os parâmetros
+    cursor.execute(comando_sql, (nova_divisao,) + ids_para_alterar)
 
-    # Atualizar as siglas dos times 1 e 2
-    cursor.execute("UPDATE times SET sigla = 'TJP' WHERE id = 1")
-    cursor.execute("UPDATE times SET sigla = 'CHB' WHERE id = 2")
+    # Verifica quantos times foram afetados pela alteração
+    times_afetados = cursor.rowcount
+    print(f"✅ {times_afetados} time(s) foram atualizados para a Divisão '{nova_divisao}'.")
 
-    # Confirmar as alterações
+    # Salva (commit) a transação
     conn.commit()
-    print("✅ Modificações realizadas com sucesso!")
+    print("✅ Alterações salvas no banco de dados!")
 
-except Exception as e:
+except sqlite3.Error as e:
+    # Em caso de erro, reverte a transação
     conn.rollback()
-    print(f"❌ Erro ao modificar o banco de dados: {e}")
+    print(f"❌ Ocorreu um erro de banco de dados: {e}")
+    print("Nenhuma alteração foi salva.")
 
 finally:
+    # Fecha a conexão com o banco de dados
     conn.close()

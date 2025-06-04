@@ -126,7 +126,8 @@ class JogoDetalhado(BaseModel):
     time_ganhador: Optional[str] = None
     time_derrotado: Optional[str] = None
     jogo_finalizado: bool
-    gols: List[GolDetalhado]  # Adicionando os gols no retorno
+    gols: List[GolDetalhado]  
+    jogadores_participantes: List[RespostaJogador]=[]
 
     class Config:
         orm_mode = True

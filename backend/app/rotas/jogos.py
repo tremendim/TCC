@@ -137,6 +137,10 @@ def obter_jogo(id: int, db: Session = Depends(get_db)):
         for gol in gols
     ]
 
+    jogadores_casa = jogo.time_casa.jogadores if jogo.time_casa else []
+    jogadores_visitante = jogo.time_visitante.jogadores if jogo.time_visitante else []
+    jogadores_participantes = jogadores_casa + jogadores_visitante
+
     return {
         "id": jogo.id,
         "time_casa_id": jogo.time_casa.id if jogo.time_casa else None,
@@ -152,6 +156,7 @@ def obter_jogo(id: int, db: Session = Depends(get_db)):
         "time_derrotado": jogo.perdedor.sigla if jogo.perdedor else None,
         "jogo_finalizado": jogo.jogo_finalizado,
         "gols": gols_formatados,
+        "jogadores_participantes": jogadores_participantes,
     }
 
 #Rota /PUT responsavel por atualizar as informações de um jogo.
@@ -161,7 +166,7 @@ def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db
     if not jogo:
         raise HTTPException(status_code=404, detail="Jogo não encontrado")
 
-     # ✅ Soma total de gols informados
+     # Soma total de gols informados
     total_gols_jogadores = sum(gol.quantidade for gol in dados.gols)
     total_placar = dados.placar_casa + dados.placar_visitante
 
@@ -171,7 +176,7 @@ def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db
             detail=f"Total de gols dos jogadores ({total_gols_jogadores}) não bate com o placar informado ({total_placar})."
         )
 
-    # ✅ Verifica se todos os jogadores pertencem a um dos dois times
+    #  Verifica se todos os jogadores pertencem a um dos dois times
     for gol in dados.gols:
         jogador = db.query(Jogador).filter(Jogador.id == gol.jogador_id).first()
         if not jogador:

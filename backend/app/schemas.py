@@ -9,7 +9,7 @@ class TimeCriar(BaseModel):
     #Atende a RN02
     sigla: str = Field(..., min_length=3, max_length=4)
 
-# Schema para resposta de um jogador
+
 class RespostaJogador(BaseModel):
     id: int
     nome: str
@@ -24,7 +24,7 @@ class RespostaJogador(BaseModel):
     class Config:
         orm_mode = True
 
-# Schema para resposta de um time
+
 class TimeResposta(BaseModel):
     id: int
     nome: str
@@ -42,16 +42,15 @@ class TimeResposta(BaseModel):
     class Config:
         orm_mode = True
 class ListaTimesResposta(BaseModel):
-    total_times: int  # Quantidade total de times
-    times: List[TimeResposta]  # Lista de times
+    total_times: int  
+    times: List[TimeResposta]  
 
     class Config:
         orm_mode = True
 
-# Atualiza as referências futuras
+
 TimeResposta.update_forward_refs()
 
-# Outros schemas...
 class CriarJogador(BaseModel):
     nome: str
     idade: int
@@ -84,19 +83,19 @@ class JogoCriar(JogoBase):
 
 class JogoResposta(BaseModel):
     id: int
-    time_casa_id: int  # ID do time da casa
-    time_casa: str  # Agora retorna o nome do time
-    imagem_time_casa: Optional[str]  # URL da imagem do time da casa
+    time_casa_id: int  
+    time_casa: str  
+    imagem_time_casa: Optional[str]  
 
-    time_visitante_id: int  # ID do time visitante
-    time_visitante: str  # Agora retorna o nome do time
-    imagem_time_visitante: Optional[str]  # URL da imagem do time visitante
+    time_visitante_id: int  
+    time_visitante: str  
+    imagem_time_visitante: Optional[str]  
 
     data_hora: datetime
     placar_casa: Optional[int] = None
     placar_visitante: Optional[int] = None
-    time_ganhador: Optional[str] = None  # Nome do time vencedor
-    time_derrotado: Optional[str] = None  # Nome do time perdedor
+    time_ganhador: Optional[str] = None  
+    time_derrotado: Optional[str] = None  
     jogo_finalizado: bool
 
     class Config:

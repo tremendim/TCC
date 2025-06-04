@@ -72,7 +72,7 @@ def listar_jogadores(
     if posicao:
         query = query.filter(Jogador.posicao.ilike(f"%{posicao}%"))
 
-    # 🔁 Ordenação dinâmica
+
     if ordenar_por == "gols":
         query = query.order_by(desc(Jogador.gols_realizados))
     elif ordenar_por == "amarelos":
@@ -90,7 +90,7 @@ def listar_jogadores(
     return jogadores
 
 
-#Buscar um jogador por ID
+#buscar um jogador pelo ID
 @router.get("/{id_jogador}", response_model=RespostaJogador)
 def obter_jogador(id_jogador: int, db: Session = Depends(obter_sessao)):
     jogador = db.query(Jogador).filter(Jogador.id == id_jogador).first()
@@ -120,7 +120,7 @@ def atualizar_jogador(jogador_id: int,dados: AtualizarJogador,db: Session = Depe
     if not jogador:
         raise HTTPException(status_code=404, detail="Jogador não encontrado.")
 
-    # Validação: time existe (se fornecido)
+    # Validação se time existe
     if dados.id_time is not None:
         time = db.query(Time).filter(Time.id == dados.id_time).first()
         if not time:
@@ -142,7 +142,7 @@ def excluir_jogador(jogador_id: int, db: Session = Depends(obter_sessao)):
     if not jogador:
         raise HTTPException(status_code=404, detail="Jogador não encontrado.")
 
-    # 🔍 Verifica se o jogador participou de algum jogo
+    # Validacao se jogador participou de algum jogo
     participacao = db.query(gols_jogo).filter(gols_jogo.c.jogador_id == jogador_id).first()
 
     if participacao:

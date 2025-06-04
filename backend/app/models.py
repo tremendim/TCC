@@ -13,7 +13,6 @@ gols_jogo = Table(
 )
 
 
-# Modelo do banco de dados
 class Time(Base):
     __tablename__ = "times"
     id = Column(Integer, primary_key=True, index=True)
@@ -34,17 +33,17 @@ class Time(Base):
 class Jogador(Base):
     __tablename__ = "jogadores"
 
-    id = Column(Integer, primary_key=True, index=True)  # ID do jogador
-    nome = Column(String, index=True, nullable=False)  # Nome do jogador
-    idade = Column(Integer, nullable=False)  # Idade do jogador
-    posicao = Column(String, nullable=False)  # Posição em campo (ex.: goleiro, atacante, etc.)
-    id_time = Column(Integer, ForeignKey("times.id"))  # Relação com o time (chave estrangeira)
-    gols_realizados = Column(Integer, default=0)  # Gols realizados pelo jogador
+    id = Column(Integer, primary_key=True, index=True)  
+    nome = Column(String, index=True, nullable=False) 
+    idade = Column(Integer, nullable=False)  
+    posicao = Column(String, nullable=False)  
+    id_time = Column(Integer, ForeignKey("times.id"))  
+    gols_realizados = Column(Integer, default=0)  
     imagem = Column(String, nullable=True)
     cartoes_amarelos = Column(Integer, default=0) 
     cartoes_vermelhos = Column(Integer, default=0)  
 
-    # Relação para acessar o time do jogador
+    #Relação para acessar o time do jogador
     time = relationship("Time", back_populates="jogadores")
 
 class Jogo(Base):
@@ -60,9 +59,9 @@ class Jogo(Base):
     time_derrotado = Column(Integer, ForeignKey("times.id"))
     jogo_finalizado = Column(Boolean, default=False)
     
-    # Relacionamentos com os times
+    #Relacionamentos com os times
     time_casa = relationship("Time", foreign_keys=[time_casa_id])
     time_visitante = relationship("Time", foreign_keys=[time_visitante_id])
     vencedor = relationship("Time", foreign_keys=[time_ganhador])
     perdedor = relationship("Time", foreign_keys=[time_derrotado])
-    gols = relationship("Jogador", secondary=gols_jogo, backref="jogos")  # Gols marcados no jogo
+    gols = relationship("Jogador", secondary=gols_jogo, backref="jogos") 

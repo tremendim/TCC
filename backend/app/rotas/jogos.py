@@ -51,20 +51,20 @@ def listar_jogos(
         joinedload(Jogo.perdedor)
     )
 
-    # Filtrar por data específica
+    # Filtragem por data específica
     if data:
         query = query.filter(
             Jogo.data_hora >= f"{data} 00:00:00",
             Jogo.data_hora <= f"{data} 23:59:59"
         )
 
-    # Filtrar por período (hoje, semana, mês)
+    # Filtrar por periodo
     elif periodo:
         hoje = date.today()
         if periodo == "hoje":
             query = query.filter(Jogo.data_hora >= hoje, Jogo.data_hora < hoje + timedelta(days=1))
         elif periodo == "semana":
-            inicio_semana = hoje - timedelta(days=hoje.weekday())  # Segunda-feira
+            inicio_semana = hoje - timedelta(days=hoje.weekday())
             fim_semana = inicio_semana + timedelta(days=6)
             query = query.filter(Jogo.data_hora >= inicio_semana, Jogo.data_hora <= fim_semana)
         elif periodo == "mes":
@@ -72,13 +72,12 @@ def listar_jogos(
             proximo_mes = (inicio_mes + timedelta(days=32)).replace(day=1)
             query = query.filter(Jogo.data_hora >= inicio_mes, Jogo.data_hora < proximo_mes)
 
-    # Filtrar por ID do time (caso o usuário informe um time específico)
+    # Filtragem por Id do time caso fornecido
     if time_id:
         query = query.filter(or_(Jogo.time_casa_id == time_id, Jogo.time_visitante_id == time_id))
 
     jogos = query.all()
 
-    # Retorno da resposta mantendo o formato original
     return [
         {
             "id": jogo.id,
@@ -201,13 +200,13 @@ def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db
     if not time_casa or not time_visitante:
         raise HTTPException(status_code=404, detail="Time não encontrado")
 
-    # Atualiza estatísticas de gols
+    # Logica para atualizar as estatisticas
     time_casa.gols_feitos += jogo.placar_casa
     time_casa.gols_sofridos += jogo.placar_visitante
     time_visitante.gols_feitos += jogo.placar_visitante
     time_visitante.gols_sofridos += jogo.placar_casa
 
-    # Atualiza vitórias, derrotas, empates e pontuação
+    # Atualiza V,D e empates
     if jogo.placar_casa > jogo.placar_visitante:
         time_casa.vitorias += 1
         time_casa.pontuacao += 3
@@ -228,17 +227,17 @@ def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db
         jogo.time_ganhador = None  # Sem vencedor
         jogo.time_derrotado = None  # Sem derrotado
 
-    # Limpa os gols anteriores do jogo (caso seja uma atualização)
+    #Limpa os gols anteriores do jogo (caso seja uma atualização)
     db.execute(gols_jogo.delete().where(gols_jogo.c.jogo_id == jogo.id))
 
-    # Verifica se há gols antes de processar
+    #Verificação se teve gols
     if dados.gols:
         for gol in dados.gols:
             jogador = db.query(Jogador).filter(Jogador.id == gol.jogador_id).first()
             if not jogador:
                 raise HTTPException(status_code=404, detail=f"Jogador {gol.jogador_id} não encontrado")
 
-            # Adiciona os gols na tabela intermediária
+            # Adiciona os gols na tabela gols_jogo
             db.execute(gols_jogo.insert().values(
                 jogo_id=jogo.id,
                 jogador_id=gol.jogador_id,
@@ -249,7 +248,6 @@ def atualizar_placar(dados: AtualizarPlacarComGols, db: Session = Depends(get_db
             jogador.gols_realizados += gol.quantidade
             db.add(jogador)
 
-    # Salva todas as mudanças no banco de dados
     db.commit()
     db.refresh(jogo)
 

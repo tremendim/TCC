@@ -50,7 +50,7 @@ def listar_times(
 ):
     query = db.query(Time)
 
-    # 🔍 Aplicando filtros
+    #plicando filtros
     if nome:
         query = query.filter(Time.nome.ilike(f"%{nome}%"))
     if sigla:
@@ -60,7 +60,7 @@ def listar_times(
     if pontuacao_max is not None:
         query = query.filter(Time.pontuacao <= pontuacao_max)
 
-    # 📊 Ordenação
+    #Ordenação
     if ordem:
         if ordem == "pontuacao":
             query = query.order_by(desc(Time.pontuacao))
@@ -71,7 +71,7 @@ def listar_times(
 
     times = query.all()
 
-    # 🔄 Convertendo os objetos corretamente para TimeResposta
+    #Convertendo os objetos corretamente para TimeResposta
     return times
 
 @router.get("/classificacao")
